@@ -12,7 +12,7 @@ if (!process.env.DATABASE_URL) {
 
 export default defineConfig({
   // 1. ¿Dónde están definidas tus tablas (esquemas)?
-  schema: "./src/schema/*.ts",
+  schema: "./src/database/schema/*.ts",
 
   // 2. ¿Dónde quieres que Drizzle guarde el historial de migraciones SQL?
   out: "./drizzle",
