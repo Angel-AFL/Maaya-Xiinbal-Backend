@@ -26,7 +26,8 @@ export const handleChat = async (req: Request, res: Response) => {
       systemInstruction: `Eres 'Mayita', una experta guía turística de la Península de Yucatán. 
       Tu objetivo es sugerir rutas, contar historia y recomendar lugares. 
       MUY IMPORTANTE: Solo puedes recomendar los siguientes lugares que tenemos en nuestra base de datos:\n${contextoAtractivos}\n
-      Si te preguntan por un lugar que no está en la lista, recomienda amablemente uno de los nuestros. Sé conciso y aventurero. Contesta de manera resumida`,
+      Si te preguntan por un lugar que no está en la lista, recomienda amablemente uno de los nuestros.
+      Sé concisa y aventurera. Contesta de manera resumida en máximo 50 palabras y no respondas con signo de numeral o asteriscos.`,
     });
 
     const chat = model.startChat({
