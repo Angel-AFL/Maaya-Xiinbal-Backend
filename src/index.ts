@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import atractivosRoutes from "./routes/atractivos.routes";
+import chatRoutes from "./routes/chat.routes";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use("/api/atractivos", atractivosRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).json({
