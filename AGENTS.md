@@ -17,7 +17,7 @@ src/
 ├── index.ts                  # Entry point (puerto 3000)
 ├── routes/
 │   ├── auth.routes.ts        # POST /register, /login, GET /me
-│   ├── atractivos.routes.ts  # GET / (protegido)
+│   ├── atractivos.routes.ts  # GET /, GET /:id, POST /:id/imagenes (protegido)
 │   └── chat.routes.ts        # POST / (protegido)
 ├── controllers/
 │   ├── auth.controller.ts    # register, login, me (bcrypt + JWT)
@@ -48,6 +48,8 @@ npm run db:studio    # Drizzle Studio
 | POST | `/api/auth/login` | No | `auth.controller.ts:77` |
 | GET | `/api/auth/me` | Sí | `auth.controller.ts:137` |
 | GET | `/api/atractivos` | Sí | `atractivos.controller.ts:5` |
+| GET | `/api/atractivos/:id` | Sí | `atractivos.controller.ts:41` |
+| POST | `/api/atractivos/:id/imagenes` | Sí | `atractivos.controller.ts:73` |
 | POST | `/api/chat` | Sí | `chat.controller.ts:8` |
 
 ## Auth
