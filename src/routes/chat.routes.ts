@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { handleChat } from "../controllers/chat.controller";
+import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
-// El endpoint será invocado desde el frontend
-router.post("/", handleChat);
+router.post("/", authenticate, handleChat);
 
 export default router;
