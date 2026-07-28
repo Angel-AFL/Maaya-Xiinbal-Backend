@@ -1,5 +1,8 @@
 import express from "express";
 import cors from "cors";
+import historialRoutes from "./routes/historial.routes";
+import serviciosLocalesRoutes from "./routes/servicios_locales.routes";
+import itinerariosRoutes from "./routes/itinerarios.routes";
 import atractivosRoutes from "./routes/atractivos.routes";
 
 const app = express();
@@ -9,6 +12,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+app.use("/api/historial", historialRoutes);
+app.use("/api/itinerarios", itinerariosRoutes);
+app.use("/api/servicios-locales", serviciosLocalesRoutes);
 app.use("/api/atractivos", atractivosRoutes);
 
 app.get("/", (req, res) => {
