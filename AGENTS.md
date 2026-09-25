@@ -8,21 +8,41 @@ Plataforma de turismo para la Península de Yucatán. Backend para app de guía 
 - **Framework:** Express v5
 - **ORM:** Drizzle ORM
 - **DB:** PostgreSQL
-- **IA:** Google Gemini (`gemini-1.5-flash`)
+- **IA:** Google Gemini (`gemini-3.5-flash`)
 - **Auth:** JWT + bcryptjs
 
 ## Estructura
 ```
 src/
 ├── index.ts                  # Entry point (puerto 3000) + health check GET /
+├── config/
+│   └── env.ts                # Centralized env vars + validation
+├── types/
+│   └── index.ts              # Shared TypeScript interfaces
+├── errors/
+│   └── AppError.ts           # HTTP error classes (ValidationError, NotFoundError, etc.)
 ├── routes/
+│   ├── index.ts              # Barrel: combines all routers under /api
 │   ├── auth.routes.ts        # POST /register, /login, GET /me
 │   ├── atractivos.routes.ts  # GET /, GET /:id, POST /:id/imagenes (protegido)
-│   └── chat.routes.ts        # POST / (protegido)
-├── controllers/
-│   ├── auth.controller.ts    # register, login, me (bcrypt + JWT)
+│   ├── chat.routes.ts        # POST / (protegido)
+│   ├── historial.routes.ts   # GET /usuario/:user_id
+│   ├── itinerarios.routes.ts # POST /
+│   └── servicios_locales.routes.ts # GET /
+├── controllers/              # Thin: only req/res handling, delegates to services
+│   ├── auth.controller.ts    # register, login, me
 │   ├── atractivos.controller.ts
-│   └── chat.controller.ts    # Gemini chat con contexto de BD
+│   ├── chat.controller.ts
+│   ├── historial.controller.ts
+│   ├── itinerarios.controller.ts
+│   └── servicios_locales.controller.ts
+├── services/                 # Business logic layer
+│   ├── auth.service.ts       # User registration, login, profile lookup
+│   ├── atractivos.service.ts # Attraction queries + image aggregation
+│   ├── chat.service.ts       # Gemini chat + Haversine distance ordering
+│   ├── historial.service.ts  # History queries with 5-table joins
+│   ├── itinerarios.service.ts# Itinerary creation with transactions
+│   └── servicios_locales.service.ts
 ├── middleware/
 │   └── auth.middleware.ts    # Bearer token JWT, inyecta req.user
 ├── utils/
@@ -54,13 +74,16 @@ src/
 | Método | Ruta | Auth | Controlador |
 |--------|------|------|-------------|
 | GET | `/` | No | `index.ts` (health check) |
-| POST | `/api/auth/register` | No | `auth.controller.ts:10` |
-| POST | `/api/auth/login` | No | `auth.controller.ts:77` |
-| GET | `/api/auth/me` | Sí | `auth.controller.ts:137` |
-| GET | `/api/atractivos` | Sí | `atractivos.controller.ts:6` |
-| GET | `/api/atractivos/:id` | Sí | `atractivos.controller.ts:41` |
-| POST | `/api/atractivos/:id/imagenes` | Sí | `atractivos.controller.ts:73` |
-| POST | `/api/chat` | Sí | `chat.controller.ts:8` |
+| POST | `/api/auth/register` | No | `auth.controller.ts` |
+| POST | `/api/auth/login` | No | `auth.controller.ts` |
+| GET | `/api/auth/me` | Sí | `auth.controller.ts` |
+| GET | `/api/atractivos` | Sí | `atractivos.controller.ts` |
+| GET | `/api/atractivos/:id` | Sí | `atractivos.controller.ts` |
+| POST | `/api/atractivos/:id/imagenes` | Sí | `atractivos.controller.ts` |
+| POST | `/api/chat` | Sí | `chat.controller.ts` |
+| GET | `/api/historial/usuario/:user_id` | No | `historial.controller.ts` |
+| POST | `/api/itinerarios` | No | `itinerarios.controller.ts` |
+| GET | `/api/servicios-locales` | No | `servicios_locales.controller.ts` |
 
 ## Auth
 - **Registro:** `{ nombre, apellido, correo, contrasena }` → hashea contraseña con bcryptjs (10 rounds) → retorna `{ success, token, user }` con `user: { id, nombre, apellido, correo }`
@@ -69,8 +92,27 @@ src/
 - **JWT Payload:** `{ id, correo }`, expira 7d
 - **Middleware:** `auth.middleware.ts` — `authenticate` inyecta `req.user`
 
+## Arquitectura de Servicios
+
+Los controllers están delgados: solo extraen parámetros de `req`, llaman al service, y formatean la respuesta. Toda la lógica de negocio vive en `src/services/`.
+
+**Manejo de errores:** Los services lanzan subclases de `AppError` (definidas en `src/errors/AppError.ts`):
+- `ValidationError` (400) — Campos faltantes/inválidos
+- `NotFoundError` (404) — Recurso no encontrado
+- `ConflictError` (409) — Conflicto (ej. email duplicado)
+- `UnauthorizedError` (401) — Credenciales inválidas
+
+Los controllers tienen un único catch que chequea `instanceof AppError` para mapear al status HTTP correcto.
+
+**Flujo típico:**
+```
+Routes → Controller → Service → Database
+                ↕
+          AppError (typed HTTP errors)
+```
+
 ## Mayita (Chat IA)
-- **Modelo:** `gemini-1.5-flash` via `@google/generative-ai`
+- **Modelo:** `gemini-3.5-flash` via `@google/generative-ai`
 - **systemInstruction:** Multilingüe — detecta idioma del usuario y responde en él. Nombres de lugares en español. Usa markdown para formato. Máximo 50 palabras. Solo recomienda atractivos de la BD.
 - **Contexto:** Inyecta datos reales de `cat_atractivos` al systemInstruction en cada request
 - **Historial:** El frontend envía `history: ChatMessage[]` en el body; se usa `model.startChat({ history })`
@@ -96,9 +138,6 @@ src/
 
 ### Campos principales de `users`
 `id, nombre, apellido, correo, contrasena, telefono, lat, long`
-
-## Documentación
-- `api-docs/` — 6 archivos markdown documentando cada endpoint
 
 ## Configuración
 - **`.env`** — `PORT`, `DATABASE_URL`, `GEMINI_API_KEY`, `JWT_SECRET`
