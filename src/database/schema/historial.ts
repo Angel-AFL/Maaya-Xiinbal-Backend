@@ -8,7 +8,6 @@ export const historial = pgTable("historial", {
     .references(() => itinerario.id, { onDelete: "cascade" })
     .notNull(),
   id_detalle_itinerario: integer("id_detalle_itinerario")
-    .references(() => detalle_itinerario.id, { onDelete: "cascade" })
-    .notNull(),
+    .references(() => detalle_itinerario.id, { onDelete: "cascade" }),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

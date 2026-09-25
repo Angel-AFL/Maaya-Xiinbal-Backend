@@ -1,8 +1,11 @@
 import { Router } from "express";
-import { getAtractivos } from "../controllers/atractivos.controller";
+import { getAtractivos, getAtractivoById, addImagen } from "../controllers/atractivos.controller";
+import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", getAtractivos);
+router.get("/", authenticate, getAtractivos);
+router.get("/:id", authenticate, getAtractivoById);
+router.post("/:id/imagenes", authenticate, addImagen);
 
 export default router;

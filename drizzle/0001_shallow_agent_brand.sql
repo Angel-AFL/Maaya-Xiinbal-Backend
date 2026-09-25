@@ -1,0 +1,1 @@
+ALTER TABLE "historial" ALTER COLUMN "id_detalle_itinerario" DROP NOT NULL;
